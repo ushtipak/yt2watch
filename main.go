@@ -44,7 +44,7 @@ type Results struct {
 }
 
 func (c *conf) getConf() *conf {
-	yamlFile, err := ioutil.ReadFile(config)
+	yamlFile, err := ioutil.ReadFile(*config)
 	if err != nil {
 		log.Fatalf("ioutil.ReadFile [%v]", err)
 	}
