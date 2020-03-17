@@ -15,14 +15,15 @@ import (
 )
 
 var (
-	config = flag.String("conf", "~/.config/yt2watch/yt2watch.yml", "config file")
+	config = flag.String("conf", "/opt/yt2watch/yt2watch.yml", "config file")
 	c      conf
 )
 
 type conf struct {
 	API struct {
-		URL string `yaml:"url"`
-		Key string `yaml:"key"`
+		URL       string `yaml:"url"`
+		Key       string `yaml:"key"`
+		Recursive bool   `yaml:"recursive"`
 	} `yaml:"api"`
 	Channels []struct {
 		Name string `yaml:"name"`
@@ -55,7 +56,8 @@ func (c *conf) getConf() *conf {
 	return c
 }
 
-func getIDs(channelID, token string) (next string, ids []string) {
+// getIDs returns a
+func getIDs(channelID, token string, recursive bool) (next string, ids []string) {
 	url := fmt.Sprintf("%s?key=%s&channelId=%s&part=snippet,id&order=date&maxResults=50", c.API.URL, c.API.Key, channelID)
 	if token != "" {
 		url = fmt.Sprintf("%s&pageToken=%s", url, token)
@@ -84,8 +86,8 @@ func getIDs(channelID, token string) (next string, ids []string) {
 	}
 
 	var videos []string
-	if results.NextPageToken != "" {
-		next, videos = getIDs(channelID, results.NextPageToken)
+	if results.NextPageToken != "" && recursive {
+		next, videos = getIDs(channelID, results.NextPageToken, recursive)
 		for _, videoID := range videos {
 			ids = append(ids, videoID)
 		}
@@ -96,11 +98,11 @@ func getIDs(channelID, token string) (next string, ids []string) {
 	}
 
 	return
-
 }
 
 func main() {
 	flag.Parse()
+	fmt.Println(*config)
 	if _, err := os.Stat(*config); err != nil {
 		log.Fatalf("missing config [%v]", config)
 	}
@@ -110,8 +112,8 @@ func main() {
 	rand.Seed(time.Now().Unix())
 	channel := c.Channels[rand.Intn(len(c.Channels))]
 
-	token, videos := getIDs(channel.ID, "")
-	log.Printf("token [%v], videos [%v]", token, videos)
+	_, videos := getIDs(channel.ID, "", c.API.Recursive)
+	log.Debugf("channel [%v], videos [%v]", channel.Name, len(videos))
 	id := videos[rand.Intn(len(videos))]
 
 	err := exec.Command("xdg-open", fmt.Sprintf("https://www.youtube.com/watch?v=%s", id)).Start()

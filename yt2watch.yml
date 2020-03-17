@@ -1,6 +1,7 @@
 api:
     url: "https://www.googleapis.com/youtube/v3/search"
     key: "acquire one from https://console.developers.google.com/apis/ :)"
+    recursive: false
 channels:
   - name: "Vsauce"
     id: "UC6nSFpj9HTCZ5t-N3Rm3-HA"
