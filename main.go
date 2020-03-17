@@ -44,6 +44,7 @@ type Results struct {
 	} `json:"error"`
 }
 
+// getConf loads up provided YAML configuration file
 func (c *conf) getConf() *conf {
 	yamlFile, err := ioutil.ReadFile(*config)
 	if err != nil {
@@ -56,7 +57,8 @@ func (c *conf) getConf() *conf {
 	return c
 }
 
-// getIDs returns a
+// getIDs returns a list of video IDs from a specified channel, as well as a potential netxPage token, if there are
+// more then 50 videos available
 func getIDs(channelID, token string, recursive bool) (next string, ids []string) {
 	url := fmt.Sprintf("%s?key=%s&channelId=%s&part=snippet,id&order=date&maxResults=50", c.API.URL, c.API.Key, channelID)
 	if token != "" {
@@ -85,6 +87,8 @@ func getIDs(channelID, token string, recursive bool) (next string, ids []string)
 		log.Fatalf("%v [%v]", results.Error.Message, results.Error.Code)
 	}
 
+	// if more than 50 videos exist and `recursive` is toggled in app configuration
+	// getIDs is called until the last page is retrieved, combining the result for return
 	var videos []string
 	if results.NextPageToken != "" && recursive {
 		next, videos = getIDs(channelID, results.NextPageToken, recursive)
