@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -14,7 +15,7 @@ import (
 )
 
 var (
-	config = "./yt2watch.yml"
+	config = flag.String("conf", "~/.config/yt2watch/yt2watch.yml", "config file")
 	c      conf
 )
 
@@ -99,7 +100,8 @@ func getIDs(channelID, token string) (next string, ids []string) {
 }
 
 func main() {
-	if _, err := os.Stat(config); err != nil {
+	flag.Parse()
+	if _, err := os.Stat(*config); err != nil {
 		log.Fatalf("missing config [%v]", config)
 	}
 	c.getConf()
